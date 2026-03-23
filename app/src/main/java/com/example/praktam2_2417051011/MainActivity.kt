@@ -8,13 +8,17 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -34,8 +38,44 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PrakTam2_2417051011Theme {
-                DaftarDocumentsScreen()
+                MainContainer()
             }
+        }
+    }
+}
+
+@Composable
+fun MainContainer() {
+
+    var selectedItem by remember { mutableIntStateOf(0) }
+    val items = listOf("Beranda", "Dokumen", "Profile")
+    val icons = listOf(Icons.Filled.Home, Icons.Filled.Search, Icons.Filled.Person)
+
+    Scaffold(
+        bottomBar = {
+            NavigationBar(
+                containerColor = Color.White,
+                tonalElevation = 8.dp
+            ) {
+                items.forEachIndexed { index, item ->
+                    NavigationBarItem(
+                        icon = { Icon(icons[index], contentDescription = item) },
+                        label = { Text(item) },
+                        selected = selectedItem == index,
+                        onClick = { selectedItem = index },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = Color(0xFF1565C0),
+                            selectedTextColor = Color(0xFF1565C0),
+                            unselectedIconColor = Color.Gray,
+                            unselectedTextColor = Color.Gray
+                        )
+                    )
+                }
+            }
+        }
+    ) { innerPadding ->
+        Box(modifier = Modifier.padding(innerPadding)) {
+            DaftarDocumentsScreen()
         }
     }
 }
@@ -46,38 +86,106 @@ fun DaftarDocumentsScreen() {
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF8FAFC))
-            .verticalScroll(rememberScrollState())
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = Color(0xFFE3F2FD))
-                .padding(24.dp)
+        HeaderSection()
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Spacer(modifier = Modifier.height(32.dp))
-            Text(
-                text = "ComVault",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1565C0)
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Aplikasi Arsip Dokumen Jurusan Ilmu Komputer",
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color(0xFF546E7A)
-            )
-        }
+            item {
+                Text(
+                    text = "Jenis Dokumen",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF263238),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(DocumentsSource.dummyDocs) { doc ->
+                        DocsRowItem(docs = doc)
+                    }
+                }
+            }
 
-        Spacer(modifier = Modifier.height(24.dp))
+            item {
+                Text(
+                    text = "List File Materi:",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF263238),
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
 
-        Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-            DocumentsSource.dummyDocs.forEach { documents ->
-                DetailScreen(documents = documents)
-                Spacer(modifier = Modifier.height(16.dp))
+            items(DocumentsSource.dummyDocs) { doc ->
+                DetailScreen(documents = doc)
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
-        Spacer(modifier = Modifier.height(100.dp))
+    }
+}
+
+@Composable
+fun HeaderSection() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = Color(0xFFE3F2FD),
+                shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+            )
+            .padding(horizontal = 24.dp, vertical = 40.dp)
+    ) {
+        Text(
+            text = "ComVault",
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF1565C0)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Selamat datang, Admin!",
+            style = MaterialTheme.typography.titleMedium,
+            color = Color(0xFF546E7A)
+        )
+    }
+}
+
+@Composable
+fun DocsRowItem(docs: Documents) {
+    Card(
+        modifier = Modifier.width(150.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF5C6BC0)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Image(
+                painter = painterResource(id = docs.ImageRes),
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                contentScale = ContentScale.Fit
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = docs.jenis,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
     }
 }
 
@@ -85,36 +193,26 @@ fun DaftarDocumentsScreen() {
 fun DetailScreen(documents: Documents) {
     var isFavorite by remember { mutableStateOf(false) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White, shape = RoundedCornerShape(16.dp))
-            .border(1.dp, Color(0xFFE0E0E0), shape = RoundedCornerShape(16.dp))
-            .padding(16.dp)
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        IconButton(
-            onClick = { isFavorite = !isFavorite },
-            modifier = Modifier.align(Alignment.TopEnd)
-        ) {
-            Icon(
-                imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                contentDescription = "Favorite Icon",
-                tint = if (isFavorite) Color.Red else Color.LightGray
-            )
-        }
-
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(id = documents.ImageRes),
-                contentDescription = documents.jenis,
-                modifier = Modifier
-                    .size(80.dp)
-                    .padding(4.dp),
-                contentScale = ContentScale.Fit
-            )
+            Box(contentAlignment = Alignment.Center) {
+                Image(
+                    painter = painterResource(id = documents.ImageRes),
+                    contentDescription = documents.jenis,
+                    modifier = Modifier.size(60.dp),
+                    contentScale = ContentScale.Fit
+                )
+            }
 
             Spacer(modifier = Modifier.width(16.dp))
 
@@ -125,32 +223,44 @@ fun DetailScreen(documents: Documents) {
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF263238)
                 )
-
                 Text(
-                    text = "Jumlah: ${documents.jumlah} File",
+                    text = "${documents.jumlah} File",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color(0xFF78909C)
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
-
                 Button(
                     onClick = { },
-                    modifier = Modifier.height(40.dp),
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .height(36.dp),
                     shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5C6BC0))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5C6BC0)),
+                    contentPadding = PaddingValues(horizontal = 12.dp)
                 ) {
-                    Text("Lihat Dokumen", style = MaterialTheme.typography.labelLarge)
+                    Text(
+                        text = "Lihat Materi",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color.White
+                    )
                 }
+            }
+
+            IconButton(onClick = { isFavorite = !isFavorite }) {
+                Icon(
+                    imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    contentDescription = "Favorite Icon",
+                    tint = if (isFavorite) Color.Red else Color.LightGray
+                )
             }
         }
     }
 }
 
-@Preview(showBackground = true, heightDp = 1000)
+@Preview(showBackground = true)
 @Composable
-fun DaftarDocumentsPreview() {
+fun DefaultPreview() {
     PrakTam2_2417051011Theme {
-        DaftarDocumentsScreen()
+        MainContainer()
     }
 }
