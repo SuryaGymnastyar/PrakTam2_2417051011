@@ -9,7 +9,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -46,7 +45,6 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainContainer() {
-
     var selectedItem by remember { mutableIntStateOf(0) }
     val items = listOf("Beranda", "Dokumen", "Profile")
     val icons = listOf(Icons.Filled.Home, Icons.Filled.Search, Icons.Filled.Person)
@@ -54,7 +52,7 @@ fun MainContainer() {
     Scaffold(
         bottomBar = {
             NavigationBar(
-                containerColor = Color.White,
+                containerColor = MaterialTheme.colorScheme.surface,
                 tonalElevation = 8.dp
             ) {
                 items.forEachIndexed { index, item ->
@@ -64,10 +62,10 @@ fun MainContainer() {
                         selected = selectedItem == index,
                         onClick = { selectedItem = index },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Color(0xFF1565C0),
-                            selectedTextColor = Color(0xFF1565C0),
-                            unselectedIconColor = Color.Gray,
-                            unselectedTextColor = Color.Gray
+                            selectedIconColor = MaterialTheme.colorScheme.secondary,
+                            selectedTextColor = MaterialTheme.colorScheme.secondary,
+                            unselectedIconColor = MaterialTheme.colorScheme.onSecondary,
+                            unselectedTextColor = MaterialTheme.colorScheme.onSecondary
                         )
                     )
                 }
@@ -85,7 +83,7 @@ fun DaftarDocumentsScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF8FAFC))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         HeaderSection()
 
@@ -99,9 +97,8 @@ fun DaftarDocumentsScreen() {
             item {
                 Text(
                     text = "Jenis Dokumen",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF263238),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 LazyRow(
@@ -116,9 +113,8 @@ fun DaftarDocumentsScreen() {
             item {
                 Text(
                     text = "List File Materi:",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF263238),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
@@ -148,14 +144,13 @@ fun HeaderSection() {
         Text(
             text = "ComVault",
             style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF1565C0)
+            color = Color(0xFF1565C0) //bug padahal sudah coba pake onBackground tapi warnanya gakeluar
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "Selamat datang, Admin!",
-            style = MaterialTheme.typography.titleMedium,
-            color = Color(0xFF546E7A)
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSecondary
         )
     }
 }
@@ -165,7 +160,9 @@ fun DocsRowItem(docs: Documents) {
     Card(
         modifier = Modifier.width(150.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF5C6BC0)),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondary
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -183,7 +180,7 @@ fun DocsRowItem(docs: Documents) {
                 text = docs.jenis,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = MaterialTheme.colorScheme.onPrimary
             )
         }
     }
@@ -197,7 +194,9 @@ fun DetailScreen(documents: Documents) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
         Row(
             modifier = Modifier
@@ -220,13 +219,12 @@ fun DetailScreen(documents: Documents) {
                 Text(
                     text = documents.jenis,
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF263238)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = "${documents.jumlah} File",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF78909C)
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondary
                 )
 
                 Button(
@@ -235,13 +233,15 @@ fun DetailScreen(documents: Documents) {
                         .padding(top = 8.dp)
                         .height(36.dp),
                     shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5C6BC0)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    ),
                     contentPadding = PaddingValues(horizontal = 12.dp)
                 ) {
                     Text(
                         text = "Lihat Materi",
                         style = MaterialTheme.typography.labelMedium,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }
