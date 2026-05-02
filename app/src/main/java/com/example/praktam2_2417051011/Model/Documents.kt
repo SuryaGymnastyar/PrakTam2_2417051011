@@ -1,8 +1,10 @@
 package Model
-import androidx.annotation.DrawableRes
-
+import com.google.gson.annotations.SerializedName
 data class Documents (
+    @SerializedName("jenis")
     val jenis: String,
-    val jumlah: String,
-    @DrawableRes val ImageRes: Int
+    @SerializedName("jumlah")
+    val jumlah: Int,
+    @SerializedName("image_url")
+    val imageUrl: String
 )
