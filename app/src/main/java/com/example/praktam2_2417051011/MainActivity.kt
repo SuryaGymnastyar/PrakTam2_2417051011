@@ -1,6 +1,6 @@
 package com.example.praktam2_2417051011
 
-import Model.Documents
+import com.example.praktam2_2417051011.data.model.Documents
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
@@ -31,7 +32,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.praktam2_2417051011.network.RetrofitClient
+import com.example.praktam2_2417051011.data.repository.DocumentsRepository
 import com.example.praktam2_2417051011.ui.theme.PrakTam2_2417051011Theme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -85,14 +86,22 @@ fun MainContainer(navController: NavController, onDocsLoaded: (List<Documents>) 
     var isLoading by remember { mutableStateOf(true) }
     var isError by remember { mutableStateOf(false) }
 
+    val repository = remember { DocumentsRepository() }
+
     LaunchedEffect(Unit) {
+        isLoading = true
         try {
-            val response = RetrofitClient.instance.getDocuments()
-            documents = response
-            onDocsLoaded(response)
-            isLoading = false
-            isError = false
+            val response = repository.getDocs()
+            if (response.isNotEmpty()) {
+                documents = response
+                onDocsLoaded(response)
+                isLoading = false
+            } else {
+                isLoading = false
+                isError = true
+            }
         } catch (e: Exception) {
+            android.util.Log.e("API_ERROR", "Gagal ngambil data documents: ${e.message}")
             isLoading = false
             isError = true
         }
@@ -320,7 +329,7 @@ fun DetailScreen(
                                 colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9))
                             ) {
                                 Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Filled.List, null, tint = Color(0xFFFFC107))
+                                    Icon(Icons.AutoMirrored.Default.List, null, tint = Color(0xFFFFC107))
                                     Spacer(Modifier.width(12.dp))
                                     Text("Semester $sem", modifier = Modifier.weight(1f), color = Color(0xFF334155))
                                 }
@@ -394,15 +403,5 @@ fun HomePreview() {
             Documents("PDF", 4, "https://cdn-icons-png.flaticon.com/512/337/337946.png")
         )
         DaftarDocumentsScreen(navController = navController, docs = dummyList)
-    }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun DetailPreview() {
-    PrakTam2_2417051011Theme {
-        val navController = rememberNavController()
-        val dummy = Documents("Word", 1, "https://cdn-icons-png.flaticon.com/512/281/281760.png")
-        DetailScreen(documents = dummy, navController = navController, isFullScreen = true)
     }
 }
