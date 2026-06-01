@@ -21,10 +21,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import com.example.praktam2_2417051011.R
 import com.example.praktam2_2417051011.data.model.Documents
 import com.example.praktam2_2417051011.data.model.LocalFile
 import com.example.praktam2_2417051011.data.model.Matkul
@@ -36,10 +40,12 @@ import com.example.praktam2_2417051011.ui.theme.onSecondaryText
 
 @Composable
 fun DetailDocuments(
-    documents: Documents,
+    paramId: String,
+    globalDocs: List<Documents>,
     navController: NavController
 ) {
-    var selectedSemester by remember { mutableStateOf<Int?>(null) }
+    var selectedSemester by remember { mutableStateOf<Int?>(paramId.toIntOrNull()) }
+    var selectedDoc by remember { mutableStateOf<Documents?>(globalDocs.find { it.jenis.equals(paramId, ignoreCase = true) }) }
     var selectedMatkul by remember { mutableStateOf<Matkul?>(null) }
 
     var masterMatkulList by remember { mutableStateOf<List<Matkul>>(emptyList()) }
@@ -59,9 +65,9 @@ fun DetailDocuments(
         masterMatkulList = repository.getMatkul()
     }
 
-    LaunchedEffect(selectedMatkul, showAddDialog, showEditDialog, showDeleteConfirmDialog) {
-        selectedMatkul?.let { matkul ->
-            currentFileList = repository.getFilesByMatkul(matkul.kode, documents.jenis)
+    LaunchedEffect(selectedMatkul, selectedDoc, showAddDialog, showEditDialog, showDeleteConfirmDialog) {
+        if (selectedMatkul != null && selectedDoc != null) {
+            currentFileList = repository.getFilesByMatkul(selectedMatkul!!.kode, selectedDoc!!.jenis)
         }
     }
 
@@ -87,7 +93,8 @@ fun DetailDocuments(
                         onClick = {
                             when {
                                 selectedMatkul != null -> selectedMatkul = null
-                                selectedSemester != null -> selectedSemester = null
+                                selectedDoc != null && paramId.toIntOrNull() != null -> selectedDoc = null
+                                selectedSemester != null && globalDocs.any { it.jenis.equals(paramId, ignoreCase = true) } -> selectedSemester = null
                                 else -> navController.popBackStack()
                             }
                         }
@@ -102,8 +109,10 @@ fun DetailDocuments(
                     Text(
                         text = when {
                             selectedMatkul != null -> selectedMatkul!!.nama
+                            selectedDoc != null && selectedSemester != null -> "${selectedDoc!!.jenis.uppercase()} - SEM $selectedSemester"
+                            selectedDoc != null -> selectedDoc!!.jenis.uppercase()
                             selectedSemester != null -> "SEMESTER $selectedSemester"
-                            else -> documents.jenis.uppercase()
+                            else -> "Pilih"
                         },
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
@@ -169,6 +178,57 @@ fun DetailDocuments(
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.Bold,
                                             color = onPrimaryText
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                selectedDoc == null -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(vertical = 24.dp)
+                    ) {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(globalDocs) { doc ->
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { selectedDoc = doc },
+                                    shape = RoundedCornerShape(24.dp),
+                                    colors = CardDefaults.cardColors(containerColor = CardSurface),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                                ) {
+                                    Column(modifier = Modifier.padding(16.dp)) {
+                                        AsyncImage(
+                                            model = doc.imageUrl,
+                                            contentDescription = doc.jenis,
+                                            placeholder = painterResource(id = R.drawable.word),
+                                            error = painterResource(id = R.drawable.word),
+                                            modifier = Modifier.size(36.dp),
+                                            contentScale = ContentScale.Fit
+                                        )
+
+                                        Spacer(modifier = Modifier.height(12.dp))
+
+                                        Text(
+                                            text = doc.jenis,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = onPrimaryText
+                                        )
+                                        Text(
+                                            text = "${doc.jumlah} Folder",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = onSecondaryText
                                         )
                                     }
                                 }
@@ -265,7 +325,7 @@ fun DetailDocuments(
                                             Spacer(modifier = Modifier.width(12.dp))
                                             Column(modifier = Modifier.weight(1f)) {
                                                 Text(
-                                                    text = "${file.namaFile}.${documents.jenis.lowercase()}",
+                                                    text = "${file.namaFile}.${selectedDoc!!.jenis.lowercase()}",
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     fontWeight = FontWeight.Medium,
                                                     color = onPrimaryText,
@@ -273,7 +333,7 @@ fun DetailDocuments(
                                                     overflow = TextOverflow.Ellipsis
                                                 )
                                                 Text(
-                                                    text = documents.jenis.uppercase(),
+                                                    text = selectedDoc!!.jenis.uppercase(),
                                                     style = MaterialTheme.typography.bodySmall,
                                                     color = onSecondaryText
                                                 )
@@ -281,7 +341,7 @@ fun DetailDocuments(
                                             IconButton(
                                                 onClick = {
                                                     repository.toggleFavorite(file.id)
-                                                    currentFileList = repository.getFilesByMatkul(selectedMatkul!!.kode, documents.jenis)
+                                                    currentFileList = repository.getFilesByMatkul(selectedMatkul!!.kode, selectedDoc!!.jenis)
                                                 }
                                             ) {
                                                 Icon(
@@ -342,8 +402,8 @@ fun DetailDocuments(
                         Button(
                             colors = ButtonDefaults.buttonColors(containerColor = BlueHeadline),
                             onClick = {
-                                if (inputFileName.isNotBlank() && selectedMatkul != null) {
-                                    repository.createFile(selectedMatkul!!.kode, inputFileName, documents.jenis)
+                                if (inputFileName.isNotBlank() && selectedMatkul != null && selectedDoc != null) {
+                                    repository.createFile(selectedMatkul!!.kode, inputFileName, selectedDoc!!.jenis)
                                 }
                                 showAddDialog = false
                             }
@@ -426,7 +486,7 @@ fun DetailDocuments(
             if (showReadDialog != null) {
                 AlertDialog(
                     onDismissRequest = { showReadDialog = null },
-                    title = { Text(text = "${showReadDialog!!.namaFile}.${documents.jenis.lowercase()}", fontWeight = FontWeight.Bold) },
+                    title = { Text(text = "${showReadDialog!!.namaFile}.${selectedDoc?.jenis?.lowercase()}", fontWeight = FontWeight.Bold) },
                     text = {
                         Text(
                             text = "Ini adalah isi konten dokumen tiruan untuk mata kuliah ${selectedMatkul?.nama}. Berkas ini tersimpan dengan aman pada penyimpanan lokal memori aplikasi ComVault.",

@@ -57,23 +57,16 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(
-                            route = "detail/{jenis}",
-                            arguments = listOf(navArgument("jenis") { type = NavType.StringType })
+                            route = "detail/{id}",
+                            arguments = listOf(navArgument("id") { type = NavType.StringType })
                         ) { backStackEntry ->
-                            val jenisParam = backStackEntry.arguments?.getString("jenis")
-                            val currentDoc = globalDocs.find { it.jenis == jenisParam }
-
-                            if (currentDoc != null) {
-                                DetailDocuments(
-                                    documents = currentDoc,
-                                    navController = navController,
-                                )
-                            } else {
-                                DetailDocuments(
-                                    documents = Documents(jenis = jenisParam ?: "Unknown", jumlah = 0, imageUrl = ""),
-                                    navController = navController,
-                                )
-                            }
+                            val idParam = backStackEntry.arguments?.getString("id") ?: ""
+                            
+                            DetailDocuments(
+                                paramId = idParam,
+                                globalDocs = globalDocs,
+                                navController = navController,
+                            )
                         }
                     }
                 }

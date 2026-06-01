@@ -183,6 +183,13 @@ fun DaftarDocument(navController: NavController, docs: List<Documents>) {
                 }
             }
 
+            val semesters = (1..8).toList()
+            val filteredSemesters = if (searchQuery.isEmpty()) {
+                semesters
+            } else {
+                semesters.filter { "Semester $it".contains(searchQuery, ignoreCase = true) || it.toString() == searchQuery }
+            }
+
             item(span = { GridItemSpan(2) }) {
                 Row(
                     modifier = Modifier
@@ -192,7 +199,7 @@ fun DaftarDocument(navController: NavController, docs: List<Documents>) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (searchQuery.isEmpty()) "Semua Berkas" else "Hasil Pencarian: \"$searchQuery\"",
+                        text = if (searchQuery.isEmpty()) "Semua Semester" else "Hasil Pencarian: \"$searchQuery\"",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = onPrimaryText
@@ -200,7 +207,7 @@ fun DaftarDocument(navController: NavController, docs: List<Documents>) {
                 }
             }
 
-            if (filteredDocs.isEmpty()) {
+            if (filteredSemesters.isEmpty()) {
                 item(span = { GridItemSpan(2) }) {
                     Box(
                         modifier = Modifier
@@ -209,44 +216,32 @@ fun DaftarDocument(navController: NavController, docs: List<Documents>) {
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Berkas tidak ditemukan",
+                            text = "Semester tidak ditemukan",
                             style = MaterialTheme.typography.bodyMedium,
                             color = onSecondaryText
                         )
                     }
                 }
             } else {
-                items(filteredDocs) { doc ->
+                items(filteredSemesters) { sem ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { navController.navigate("detail/${doc.jenis}") },
+                            .height(110.dp)
+                            .clickable { navController.navigate("detail/$sem") },
                         shape = RoundedCornerShape(24.dp),
                         colors = CardDefaults.cardColors(containerColor = CardSurface),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            AsyncImage(
-                                model = doc.imageUrl,
-                                contentDescription = doc.jenis,
-                                placeholder = painterResource(id = R.drawable.word),
-                                error = painterResource(id = R.drawable.word),
-                                modifier = Modifier.size(36.dp),
-                                contentScale = ContentScale.Fit
-                            )
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Text(
-                                text = doc.jenis,
+                                text = "SEMESTER $sem",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = onPrimaryText
-                            )
-                            Text(
-                                text = "${doc.jumlah} Folder",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = onSecondaryText
                             )
                         }
                     }
