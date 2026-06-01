@@ -12,3 +12,6 @@ val WhiteBackground = Color(0xFFF8FAFC)
 val CardSurface = Color(0xFFFFFFFF)
 val onPrimaryText = Color(0xFF263238)
 val onSecondaryText = Color(0xFF546E7A)
+
+val SearchFieldBackground = Color(0xFFE2E8F0)
+val CategoryCardBackground = Color(0xFFE8EAF6)

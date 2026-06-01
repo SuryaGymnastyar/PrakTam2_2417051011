@@ -13,7 +13,9 @@ private val AppcolorScheme = lightColorScheme(
     onPrimary = Color.White,
     onSurface = onPrimaryText,
     onSecondary = onSecondaryText,
-    onBackground = BlueHeadline
+    onBackground = BlueHeadline,
+    surfaceVariant = SearchFieldBackground,
+    secondaryContainer = CategoryCardBackground
 )
 
 @Composable
