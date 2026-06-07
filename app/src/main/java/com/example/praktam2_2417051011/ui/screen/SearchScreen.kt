@@ -1,5 +1,6 @@
 package com.example.praktam2_2417051011.ui.screen
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,31 +14,28 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.example.praktam2_2417051011.data.model.LocalFile
 import com.example.praktam2_2417051011.data.repository.MatkulRepository
 import com.example.praktam2_2417051011.ui.theme.BlueHeadline
 import com.example.praktam2_2417051011.ui.theme.CardSurface
 import com.example.praktam2_2417051011.ui.theme.onPrimaryText
 import com.example.praktam2_2417051011.ui.theme.onSecondaryText
+import java.io.File
 
 @Composable
-fun SearchScreen(
-    navController: NavController
-) {
-    var query by remember { mutableStateOf("") }
-    val allFiles = MatkulRepository.dummyFiles
+fun SearchScreen() {
+    val context = LocalContext.current
+    var searchQuery by mutableStateOf("")
     var showReadDialog by remember { mutableStateOf<LocalFile?>(null) }
 
-    val filteredFiles = remember(query, allFiles) {
-        if (query.isBlank()) {
-            allFiles
-        } else {
-            allFiles.filter { it.namaFile.contains(query, ignoreCase = true) }
-        }
+    val repository = remember { MatkulRepository() }
+
+    val allFiles = remember(searchQuery) {
+        repository.searchFiles(searchQuery)
     }
 
     Column(
@@ -47,7 +45,7 @@ fun SearchScreen(
             .padding(16.dp)
     ) {
         Text(
-            text = "Pencarian",
+            text = "Cari Berkas",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = BlueHeadline,
@@ -55,63 +53,46 @@ fun SearchScreen(
         )
 
         OutlinedTextField(
-            value = query,
-            onValueChange = { query = it },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            placeholder = { Text("Cari nama file dokumen...", color = onSecondaryText) },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search Icon",
-                    tint = onSecondaryText
-                )
-            },
-            shape = RoundedCornerShape(24.dp),
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("Masukkan nama berkas...") },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = BlueHeadline) },
+            shape = RoundedCornerShape(16.dp),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                 focusedBorderColor = BlueHeadline,
-                unfocusedBorderColor = Color.Transparent
+                unfocusedContainerColor = CardSurface,
+                focusedContainerColor = CardSurface
             )
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (filteredFiles.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        if (allFiles.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(
-                    text = if (query.isBlank()) "Belum ada berkas terunggah di aplikasi" else "Tidak ada file yang cocok",
+                    text = if (searchQuery.isEmpty()) "Belum ada berkas terunggah" else "Berkas tidak ditemukan",
                     color = onSecondaryText,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxSize()
             ) {
-                item {
-                    Text(
-                        text = if (query.isBlank()) "Semua Berkas Dokumen" else "Hasil Pencarian Berkas",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = BlueHeadline,
-                        modifier = Modifier.padding(vertical = 4.dp)
-                    )
-                }
-
-                items(filteredFiles, key = { it.id }) { file ->
+                items(allFiles, key = { it.id }) { file ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable {
-                                showReadDialog = file
-                            },
+                            .clickable { showReadDialog = file },
                         shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = CardSurface)
+                        colors = CardDefaults.cardColors(containerColor = CardSurface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                     ) {
                         Row(
                             modifier = Modifier.padding(16.dp),
@@ -123,17 +104,17 @@ fun SearchScreen(
                                     .background(Color.Gray, shape = RoundedCornerShape(2.dp))
                             )
                             Spacer(modifier = Modifier.width(16.dp))
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = "${file.namaFile}.${file.jenisDokumen.lowercase()}",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.SemiBold,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
                                     color = onPrimaryText,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    text = "${file.jenisDokumen.uppercase()} • Kode Matkul: ${file.kodeMatkul}",
+                                    text = "Mata Kuliah: ${file.kodeMatkul} | ${file.jenisDokumen.uppercase()}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = onSecondaryText
                                 )
@@ -143,27 +124,93 @@ fun SearchScreen(
                 }
             }
         }
-    }
 
-    if (showReadDialog != null) {
-        AlertDialog(
-            onDismissRequest = { showReadDialog = null },
-            title = { Text(text = "${showReadDialog!!.namaFile}.${showReadDialog!!.jenisDokumen.lowercase()}", fontWeight = FontWeight.Bold) },
-            text = {
-                Text(
-                    text = "Ini adalah isi konten dokumen dari mata kuliah dengan kode ${showReadDialog!!.kodeMatkul}. Berkas ini diakses langsung dari menu pencarian ComVault.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = onPrimaryText
-                )
-            },
-            confirmButton = {
-                Button(
-                    colors = ButtonDefaults.buttonColors(containerColor = BlueHeadline),
-                    onClick = { showReadDialog = null }
-                ) {
-                    Text("Tutup", color = Color.White)
+        if (showReadDialog != null) {
+            AlertDialog(
+                onDismissRequest = { showReadDialog = null },
+                title = { Text(text = "${showReadDialog!!.namaFile}.${showReadDialog!!.jenisDokumen.lowercase()}", fontWeight = FontWeight.Bold) },
+                text = {
+                    Column {
+                        Text(
+                            text = "Lokasi File Terjaga:",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = BlueHeadline
+                        )
+                        Text(
+                            text = showReadDialog!!.filePath ?: "Tidak ada data path fisik",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = onSecondaryText
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Berkas biner Anda tersimpan dengan aman pada memori cache lokal aplikasi ComVault.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = onPrimaryText
+                        )
+                    }
+                },
+                confirmButton = {
+                    Row {
+                        TextButton(onClick = { showReadDialog = null }) {
+                            Text("Tutup", color = BlueHeadline)
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            colors = ButtonDefaults.buttonColors(containerColor = BlueHeadline),
+                            onClick = {
+                                showReadDialog!!.filePath?.let { path ->
+                                    openFile(context, path, showReadDialog!!.jenisDokumen)
+                                }
+                                showReadDialog = null
+                            }
+                        ) {
+                            Text("Buka Berkas", color = Color.White)
+                        }
+                    }
                 }
-            }
+            )
+        }
+    }
+}
+
+private fun openFile(context: Context, filePath: String, jenisDokumen: String) {
+    try {
+        val file = File(filePath)
+        if (!file.exists()) {
+            android.widget.Toast.makeText(context, "Berkas fisik tidak ditemukan di cache", android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val uri = androidx.core.content.FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            file
         )
+
+        val mimeType = when (jenisDokumen.lowercase()) {
+            "pdf" -> "application/pdf"
+            "word" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            "excel" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            "ppt" -> "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            else -> "*/*"
+        }
+
+        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, mimeType)
+            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
+
+        val chooserIntent = android.content.Intent.createChooser(intent, "Buka berkas menggunakan:").apply {
+            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+
+        context.startActivity(chooserIntent)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        android.widget.Toast.makeText(context, "Gagal membuka berkas: ${e.localizedMessage}", android.widget.Toast.LENGTH_LONG).show()
     }
 }

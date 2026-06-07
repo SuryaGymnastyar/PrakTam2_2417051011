@@ -7,5 +7,6 @@ data class LocalFile(
     val kodeMatkul: String,
     val namaFile: String,
     val jenisDokumen: String,
+    val filePath: String? = null,
     val isFavorite: Boolean = false
 )

@@ -3,7 +3,11 @@ package com.example.praktam2_2417051011
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -13,6 +17,7 @@ import com.example.praktam2_2417051011.data.model.Documents
 import com.example.praktam2_2417051011.ui.screen.Dashboard
 import com.example.praktam2_2417051011.ui.screen.DetailDocuments
 import com.example.praktam2_2417051011.ui.screen.LoginScreen
+import com.example.praktam2_2417051011.ui.screen.RegisterScreen
 import com.example.praktam2_2417051011.ui.theme.PrakTam2_2417051011Theme
 
 class MainActivity : ComponentActivity() {
@@ -25,25 +30,49 @@ class MainActivity : ComponentActivity() {
                     context.getSharedPreferences("comvault_prefs", MODE_PRIVATE)
                 }
 
-                var isLoggedIn by remember {
-                    mutableStateOf(sharedPreferences.getBoolean("is_logged_in", false))
+                val isLoggedInInitial = remember {
+                    sharedPreferences.getBoolean("is_logged_in", false)
                 }
 
                 val navController = rememberNavController()
-
                 var globalDocs by remember { mutableStateOf<List<Documents>>(emptyList()) }
 
-                if (!isLoggedIn) {
-                    LoginScreen(
-                        onLoginSuccess = {
-                            isLoggedIn = true
-                        }
-                    )
-                } else {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
                     NavHost(
                         navController = navController,
-                        startDestination = "dashboard"
+                        startDestination = if (isLoggedInInitial) "dashboard" else "login"
                     ) {
+                        composable("login") {
+                            LoginScreen(
+                                onLoginSuccess = {
+                                    navController.navigate("dashboard") {
+                                        popUpTo("login") { inclusive = true }
+                                    }
+                                },
+                                onNavigateToRegister = {
+                                    navController.navigate("register")
+                                }
+                            )
+                        }
+
+                        composable("register") {
+                            RegisterScreen(
+                                onRegisterSuccess = {
+                                    navController.navigate("login") {
+                                        popUpTo("register") { inclusive = true }
+                                    }
+                                },
+                                onNavigateToLogin = {
+                                    navController.navigate("login") {
+                                        popUpTo("register") { inclusive = true }
+                                    }
+                                }
+                            )
+                        }
+
                         composable("dashboard") {
                             Dashboard(
                                 navController = navController,
@@ -51,7 +80,9 @@ class MainActivity : ComponentActivity() {
                                     globalDocs = loadedDocs
                                 },
                                 onLogout = {
-                                    isLoggedIn = false
+                                    navController.navigate("login") {
+                                        popUpTo(0) { inclusive = true }
+                                    }
                                 }
                             )
                         }
@@ -70,7 +101,7 @@ class MainActivity : ComponentActivity() {
                                 )
                             } else {
                                 DetailDocuments(
-                                    documents = Documents(jenis = jenisParam ?: "Unknown", jumlah = 0, imageUrl = ""),
+                                    documents = Documents(jenis = jenisParam ?: "Unknown", imageUrl = ""),
                                     navController = navController,
                                 )
                             }

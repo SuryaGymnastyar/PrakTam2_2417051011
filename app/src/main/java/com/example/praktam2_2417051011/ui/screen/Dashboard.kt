@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.praktam2_2417051011.data.model.Documents
 import com.example.praktam2_2417051011.data.repository.DocumentsRepository
+import com.example.praktam2_2417051011.ui.theme.BlueHeadline
 
 @Composable
 fun Dashboard(
@@ -62,10 +63,11 @@ fun Dashboard(
                         selected = selectedItem == index,
                         onClick = { selectedItem = index },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.secondary,
-                            selectedTextColor = MaterialTheme.colorScheme.secondary,
+                            selectedIconColor = BlueHeadline,
+                            selectedTextColor = BlueHeadline,
                             unselectedIconColor = Color.Gray,
-                            unselectedTextColor = Color.Gray
+                            unselectedTextColor = Color.Gray,
+                            indicatorColor = MaterialTheme.colorScheme.surfaceVariant
                         )
                     )
                 }
@@ -77,7 +79,7 @@ fun Dashboard(
                 0 -> {
                     if (isLoading) {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(color = Color(0xFF1565C0))
+                            CircularProgressIndicator(color = BlueHeadline)
                         }
                     } else if (isError || documents.isEmpty()) {
                         Box(
@@ -105,7 +107,7 @@ fun Dashboard(
                     }
                 }
                 1 -> {
-                    SearchScreen(navController = navController)
+                    SearchScreen()
                 }
                 2 -> {
                     Profile(onLogoutSuccess = onLogout)

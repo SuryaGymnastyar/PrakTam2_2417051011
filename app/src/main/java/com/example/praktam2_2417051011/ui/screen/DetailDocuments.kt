@@ -1,5 +1,9 @@
 package com.example.praktam2_2417051011.ui.screen
 
+import android.content.Context
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -21,6 +25,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -33,12 +38,15 @@ import com.example.praktam2_2417051011.ui.theme.BlueHeadline
 import com.example.praktam2_2417051011.ui.theme.CardSurface
 import com.example.praktam2_2417051011.ui.theme.onPrimaryText
 import com.example.praktam2_2417051011.ui.theme.onSecondaryText
+import java.io.File
+import java.io.FileOutputStream
 
 @Composable
 fun DetailDocuments(
     documents: Documents,
     navController: NavController
 ) {
+    val context = LocalContext.current
     var selectedSemester by remember { mutableStateOf<Int?>(null) }
     var selectedMatkul by remember { mutableStateOf<Matkul?>(null) }
 
@@ -53,7 +61,29 @@ fun DetailDocuments(
     var inputFileName by remember { mutableStateOf("") }
     var editFileNameInput by remember { mutableStateOf("") }
 
+    var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
+    var actualSystemName by remember { mutableStateOf("") }
+
     val repository = remember { MatkulRepository() }
+
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            selectedFileUri = it
+            val cursor = context.contentResolver.query(it, null, null, null, null)
+            cursor?.use { c ->
+                if (c.moveToFirst()) {
+                    val nameIndex = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                    if (nameIndex != -1) {
+                        actualSystemName = c.getString(nameIndex)
+                        inputFileName = actualSystemName.substringBeforeLast(".")
+                    }
+                }
+            }
+            showAddDialog = true
+        }
+    }
 
     LaunchedEffect(Unit) {
         masterMatkulList = repository.getMatkul()
@@ -119,8 +149,14 @@ fun DetailDocuments(
             if (selectedMatkul != null) {
                 FloatingActionButton(
                     onClick = {
-                        inputFileName = ""
-                        showAddDialog = true
+                        val mimeType = when (documents.jenis.lowercase()) {
+                            "pdf" -> "application/pdf"
+                            "word" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                            "excel" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                            "ppt" -> "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                            else -> "*/*"
+                        }
+                        filePickerLauncher.launch(mimeType)
                     },
                     containerColor = BlueHeadline,
                     contentColor = Color.White
@@ -343,7 +379,11 @@ fun DetailDocuments(
                             colors = ButtonDefaults.buttonColors(containerColor = BlueHeadline),
                             onClick = {
                                 if (inputFileName.isNotBlank() && selectedMatkul != null) {
-                                    repository.createFile(selectedMatkul!!.kode, inputFileName, documents.jenis)
+                                    var savedPath: String? = null
+                                    selectedFileUri?.let { uri ->
+                                        savedPath = saveToInternalStorage(context, uri, actualSystemName)
+                                    }
+                                    repository.createFile(selectedMatkul!!.kode, inputFileName, documents.jenis, savedPath)
                                 }
                                 showAddDialog = false
                             }
@@ -428,22 +468,104 @@ fun DetailDocuments(
                     onDismissRequest = { showReadDialog = null },
                     title = { Text(text = "${showReadDialog!!.namaFile}.${documents.jenis.lowercase()}", fontWeight = FontWeight.Bold) },
                     text = {
-                        Text(
-                            text = "Ini adalah isi konten dokumen tiruan untuk mata kuliah ${selectedMatkul?.nama}. Berkas ini tersimpan dengan aman pada penyimpanan lokal memori aplikasi ComVault.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = onPrimaryText
-                        )
+                        Column {
+                            Text(
+                                text = "Lokasi File Terjaga:",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = BlueHeadline
+                            )
+                            Text(
+                                text = showReadDialog!!.filePath ?: "Tidak ada data path fisik",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = onSecondaryText
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Ini adalah isi konten dokumen asli untuk mata kuliah ${selectedMatkul?.nama}. Berkas biner Anda tersimpan dengan aman pada memori cache lokal aplikasi ComVault.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = onPrimaryText
+                            )
+                        }
                     },
                     confirmButton = {
-                        Button(
-                            colors = ButtonDefaults.buttonColors(containerColor = BlueHeadline),
-                            onClick = { showReadDialog = null }
-                        ) {
-                            Text("Tutup", color = Color.White)
+                        Row {
+                            TextButton(onClick = { showReadDialog = null }) {
+                                Text("Tutup", color = BlueHeadline)
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                colors = ButtonDefaults.buttonColors(containerColor = BlueHeadline),
+                                onClick = {
+                                    showReadDialog!!.filePath?.let { path ->
+                                        openFile(context, path, documents.jenis)
+                                    }
+                                    showReadDialog = null
+                                }
+                            ) {
+                                Text("Buka Berkas", color = Color.White)
+                            }
                         }
                     }
                 )
             }
         }
+    }
+}
+
+private fun saveToInternalStorage(context: Context, uri: Uri, fileNameWithExtension: String): String? {
+    return try {
+        val inputStream = context.contentResolver.openInputStream(uri) ?: return null
+        val outputFile = File(context.filesDir, fileNameWithExtension)
+        inputStream.use { input ->
+            FileOutputStream(outputFile).use { output ->
+                input.copyTo(output)
+            }
+        }
+        outputFile.absolutePath
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
+
+private fun openFile(context: Context, filePath: String, jenisDokumen: String) {
+    try {
+        val file = File(filePath)
+        if (!file.exists()) {
+            android.widget.Toast.makeText(context, "Berkas fisik tidak ditemukan di cache", android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val uri = androidx.core.content.FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            file
+        )
+
+        val mimeType = when (jenisDokumen.lowercase()) {
+            "pdf" -> "application/pdf"
+            "word" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            "excel" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            "ppt" -> "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            else -> "*/*"
+        }
+
+        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, mimeType)
+            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
+
+        val chooserIntent = android.content.Intent.createChooser(intent, "Buka berkas menggunakan:").apply {
+            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+
+        context.startActivity(chooserIntent)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        android.widget.Toast.makeText(context, "Gagal membuka berkas: ${e.localizedMessage}", android.widget.Toast.LENGTH_LONG).show()
     }
 }

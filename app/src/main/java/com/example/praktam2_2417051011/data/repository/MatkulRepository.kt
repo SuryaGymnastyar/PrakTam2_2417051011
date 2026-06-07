@@ -7,15 +7,6 @@ class MatkulRepository {
 
     companion object {
         val dummyFiles = mutableListOf<LocalFile>()
-        private var isInitialized = false
-    }
-
-    init {
-        if (!isInitialized) {
-            dummyFiles.add(LocalFile(kodeMatkul = "COM620107", namaFile = "MODUL 1_PRAKTIKUM", jenisDokumen = "pdf", isFavorite = false))
-            dummyFiles.add(LocalFile(kodeMatkul = "COM620107", namaFile = "TUGAS KELOMPOK_FIX", jenisDokumen = "pdf", isFavorite = false))
-            isInitialized = true
-        }
     }
 
     fun getMatkul(): List<Matkul> {
@@ -143,8 +134,14 @@ class MatkulRepository {
             .sortedByDescending { it.isFavorite }
     }
 
-    fun createFile(kodeMatkul: String, nama: String, jenis: String) {
-        val newFile = LocalFile(kodeMatkul = kodeMatkul, namaFile = nama, jenisDokumen = jenis, isFavorite = false)
+    fun createFile(kodeMatkul: String, nama: String, jenis: String, filePath: String?) {
+        val newFile = LocalFile(
+            kodeMatkul = kodeMatkul,
+            namaFile = nama,
+            jenisDokumen = jenis,
+            filePath = filePath,
+            isFavorite = false
+        )
         dummyFiles.add(newFile)
     }
 
@@ -166,5 +163,13 @@ class MatkulRepository {
 
     fun deleteFile(fileId: String) {
         dummyFiles.removeAll { it.id == fileId }
+    }
+
+    fun searchFiles(query: String): List<LocalFile> {
+        return if (query.isBlank()) {
+            dummyFiles
+        } else {
+            dummyFiles.filter { it.namaFile.contains(query, ignoreCase = true) }
+        }
     }
 }
