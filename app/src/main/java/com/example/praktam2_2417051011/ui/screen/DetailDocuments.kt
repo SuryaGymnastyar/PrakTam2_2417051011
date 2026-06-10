@@ -40,6 +40,9 @@ import com.example.praktam2_2417051011.ui.theme.onPrimaryText
 import com.example.praktam2_2417051011.ui.theme.onSecondaryText
 import java.io.File
 import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun DetailDocuments(
@@ -65,6 +68,13 @@ fun DetailDocuments(
     var actualSystemName by remember { mutableStateOf("") }
 
     val repository = remember { MatkulRepository() }
+
+    val dialogModifier = Modifier
+        .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(28.dp))
+
+    fun formatTimestamp(timestamp: Long): String {
+        return SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date(timestamp))
+    }
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -309,6 +319,11 @@ fun DetailDocuments(
                                                     overflow = TextOverflow.Ellipsis
                                                 )
                                                 Text(
+                                                    text = "Terakhir diubah: ${formatTimestamp(file.timestamp)}",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = onSecondaryText
+                                                )
+                                                Text(
                                                     text = documents.jenis.uppercase(),
                                                     style = MaterialTheme.typography.bodySmall,
                                                     color = onSecondaryText
@@ -363,6 +378,7 @@ fun DetailDocuments(
 
             if (showAddDialog) {
                 AlertDialog(
+                    modifier = dialogModifier,
                     onDismissRequest = { showAddDialog = false },
                     title = { Text(text = "Tambah Berkas Baru", fontWeight = FontWeight.Bold) },
                     text = {
@@ -401,6 +417,7 @@ fun DetailDocuments(
 
             if (showEditDialog != null) {
                 AlertDialog(
+                    modifier = dialogModifier,
                     onDismissRequest = { showEditDialog = null },
                     title = { Text(text = "Ubah Nama Berkas", fontWeight = FontWeight.Bold) },
                     text = {
@@ -435,6 +452,7 @@ fun DetailDocuments(
 
             if (showDeleteConfirmDialog != null) {
                 AlertDialog(
+                    modifier = dialogModifier,
                     onDismissRequest = { showDeleteConfirmDialog = null },
                     title = { Text(text = "Hapus Berkas", fontWeight = FontWeight.Bold) },
                     text = {
@@ -465,33 +483,20 @@ fun DetailDocuments(
 
             if (showReadDialog != null) {
                 AlertDialog(
+                    modifier = dialogModifier,
                     onDismissRequest = { showReadDialog = null },
-                    title = { Text(text = "${showReadDialog!!.namaFile}.${documents.jenis.lowercase()}", fontWeight = FontWeight.Bold) },
+                    title = { Text(text = "Berkas: ${showReadDialog!!.namaFile}.${documents.jenis.lowercase()}", fontWeight = FontWeight.Bold) },
                     text = {
-                        Column {
-                            Text(
-                                text = "Lokasi File Terjaga:",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = BlueHeadline
-                            )
-                            Text(
-                                text = showReadDialog!!.filePath ?: "Tidak ada data path fisik",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = onSecondaryText
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Ini adalah isi konten dokumen asli untuk mata kuliah ${selectedMatkul?.nama}. Berkas biner Anda tersimpan dengan aman pada memori cache lokal aplikasi ComVault.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = onPrimaryText
-                            )
-                        }
+                        Text(
+                            text = "Apakah Anda ingin membuka berkas ini sekarang?",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = onPrimaryText
+                        )
                     },
                     confirmButton = {
-                        Row {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                             TextButton(onClick = { showReadDialog = null }) {
-                                Text("Tutup", color = BlueHeadline)
+                                Text("Batal", color = BlueHeadline, fontWeight = FontWeight.SemiBold)
                             }
                             Spacer(modifier = Modifier.width(8.dp))
                             Button(
@@ -536,13 +541,11 @@ private fun openFile(context: Context, filePath: String, jenisDokumen: String) {
             android.widget.Toast.makeText(context, "Berkas fisik tidak ditemukan di cache", android.widget.Toast.LENGTH_SHORT).show()
             return
         }
-
         val uri = androidx.core.content.FileProvider.getUriForFile(
             context,
             "${context.packageName}.fileprovider",
             file
         )
-
         val mimeType = when (jenisDokumen.lowercase()) {
             "pdf" -> "application/pdf"
             "word" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -550,7 +553,6 @@ private fun openFile(context: Context, filePath: String, jenisDokumen: String) {
             "ppt" -> "application/vnd.openxmlformats-officedocument.presentationml.presentation"
             else -> "*/*"
         }
-
         val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
             setDataAndType(uri, mimeType)
             addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -558,11 +560,9 @@ private fun openFile(context: Context, filePath: String, jenisDokumen: String) {
             addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
-
         val chooserIntent = android.content.Intent.createChooser(intent, "Buka berkas menggunakan:").apply {
             addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-
         context.startActivity(chooserIntent)
     } catch (e: Exception) {
         e.printStackTrace()

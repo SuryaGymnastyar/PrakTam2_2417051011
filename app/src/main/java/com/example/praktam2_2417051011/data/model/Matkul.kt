@@ -8,5 +8,6 @@ data class Matkul(
     @SerializedName("nama")
     val nama: String,
     @SerializedName("semester")
-    val semester: Int
+    val semester: Int,
+    var lastOpened: Long = 0L
 )

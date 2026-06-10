@@ -29,8 +29,11 @@ import java.io.File
 @Composable
 fun SearchScreen() {
     val context = LocalContext.current
-    var searchQuery by mutableStateOf("")
+    var searchQuery by remember { mutableStateOf("") }
     var showReadDialog by remember { mutableStateOf<LocalFile?>(null) }
+
+    val dialogModifier = Modifier
+        .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(28.dp))
 
     val repository = remember { MatkulRepository() }
 
@@ -42,30 +45,38 @@ fun SearchScreen() {
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp)
     ) {
-        Text(
-            text = "Cari Berkas",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = BlueHeadline,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("Masukkan nama berkas...") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = BlueHeadline) },
-            shape = RoundedCornerShape(16.dp),
-            singleLine = true,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = BlueHeadline,
-                unfocusedContainerColor = CardSurface,
-                focusedContainerColor = CardSurface
-            )
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(BlueHeadline, RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+                .padding(horizontal = 24.dp, vertical = 32.dp)
+        ) {
+            Column {
+                Text(
+                    text = "Cari Berkas",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Masukkan nama berkas...") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = BlueHeadline) },
+                    shape = RoundedCornerShape(16.dp),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = BlueHeadline,
+                        unfocusedBorderColor = BlueHeadline,
+                        focusedContainerColor = CardSurface,
+                        unfocusedContainerColor = CardSurface
+                    )
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -83,7 +94,9 @@ fun SearchScreen() {
         } else {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp)
             ) {
                 items(allFiles, key = { it.id }) { file ->
                     Card(
@@ -114,7 +127,7 @@ fun SearchScreen() {
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    text = "Mata Kuliah: ${file.kodeMatkul} | ${file.jenisDokumen.uppercase()}",
+                                    text = file.jenisDokumen.uppercase(),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = onSecondaryText
                                 )
@@ -127,33 +140,20 @@ fun SearchScreen() {
 
         if (showReadDialog != null) {
             AlertDialog(
+                modifier = dialogModifier,
                 onDismissRequest = { showReadDialog = null },
                 title = { Text(text = "${showReadDialog!!.namaFile}.${showReadDialog!!.jenisDokumen.lowercase()}", fontWeight = FontWeight.Bold) },
                 text = {
-                    Column {
-                        Text(
-                            text = "Lokasi File Terjaga:",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = BlueHeadline
-                        )
-                        Text(
-                            text = showReadDialog!!.filePath ?: "Tidak ada data path fisik",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = onSecondaryText
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Berkas biner Anda tersimpan dengan aman pada memori cache lokal aplikasi ComVault.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = onPrimaryText
-                        )
-                    }
+                    Text(
+                        text = "Apakah Anda ingin membuka berkas ini sekarang?",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = onPrimaryText
+                    )
                 },
                 confirmButton = {
-                    Row {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                         TextButton(onClick = { showReadDialog = null }) {
-                            Text("Tutup", color = BlueHeadline)
+                            Text("Batal", color = BlueHeadline, fontWeight = FontWeight.SemiBold)
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
@@ -178,7 +178,7 @@ private fun openFile(context: Context, filePath: String, jenisDokumen: String) {
     try {
         val file = File(filePath)
         if (!file.exists()) {
-            android.widget.Toast.makeText(context, "Berkas fisik tidak ditemukan di cache", android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(context, "Berkas fisik tidak ditemukan", android.widget.Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -211,6 +211,6 @@ private fun openFile(context: Context, filePath: String, jenisDokumen: String) {
         context.startActivity(chooserIntent)
     } catch (e: Exception) {
         e.printStackTrace()
-        android.widget.Toast.makeText(context, "Gagal membuka berkas: ${e.localizedMessage}", android.widget.Toast.LENGTH_LONG).show()
+        android.widget.Toast.makeText(context, "Gagal membuka berkas", android.widget.Toast.LENGTH_LONG).show()
     }
 }

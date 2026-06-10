@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -41,32 +42,36 @@ fun DaftarDocument(navController: NavController, docs: List<Documents>) {
         sharedPreferences.getString("registered_nama", "User ComVault") ?: "User ComVault"
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(BlueHeadline, RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+                .padding(horizontal = 24.dp, vertical = 32.dp)
+        ) {
+            Column {
+                Text(
+                    text = "Hi $loginNama!",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Selamat datang di Comvault!",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.85f)
+                )
+            }
+        }
+
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item(span = { GridItemSpan(2) }) {
-                Column(modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)) {
-                    Text(
-                        text = "Hi $loginNama!",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = BlueHeadline
-                    )
-                    Text(
-                        text = "Selamat datang! Silakan pilih jenis dokumen yang ingin Anda buka.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = onSecondaryText
-                    )
-                }
-            }
-
             item(span = { GridItemSpan(2) }) {
                 Card(
                     modifier = Modifier
@@ -129,7 +134,8 @@ fun DaftarDocument(navController: NavController, docs: List<Documents>) {
                                     .width(130.dp)
                                     .clickable { navController.navigate("detail/${doc.jenis}") },
                                 shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White)
                             ) {
                                 Row(
                                     modifier = Modifier.padding(12.dp),
@@ -147,7 +153,7 @@ fun DaftarDocument(navController: NavController, docs: List<Documents>) {
                                         text = doc.jenis,
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Bold,
-                                        color = BlueHeadline
+                                        color = onPrimaryText
                                     )
                                 }
                             }

@@ -1,12 +1,13 @@
 package com.example.praktam2_2417051011.data.model
 
-import java.util.UUID
+import java.lang.System.currentTimeMillis
 
 data class LocalFile(
-    val id: String = UUID.randomUUID().toString(),
+    val id: Int,
     val kodeMatkul: String,
     val namaFile: String,
     val jenisDokumen: String,
-    val filePath: String? = null,
-    val isFavorite: Boolean = false
+    val filePath: String?,
+    val isFavorite: Boolean = false,
+    val timestamp: Long = currentTimeMillis()
 )
