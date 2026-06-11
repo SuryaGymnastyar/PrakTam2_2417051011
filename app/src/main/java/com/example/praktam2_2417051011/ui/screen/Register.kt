@@ -26,6 +26,8 @@ import com.example.praktam2_2417051011.ui.theme.BlueHeadline
 import com.example.praktam2_2417051011.ui.theme.SearchFieldBackground
 import com.example.praktam2_2417051011.ui.theme.onPrimaryText
 import com.example.praktam2_2417051011.ui.theme.onSecondaryText
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 
 @Composable
 fun RegisterScreen(onRegisterSuccess: () -> Unit, onNavigateToLogin: () -> Unit) {
@@ -38,6 +40,8 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit, onNavigateToLogin: () -> Unit)
     var nama by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$".toRegex()
 
     Column(
         modifier = Modifier
@@ -121,9 +125,15 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit, onNavigateToLogin: () -> Unit)
             onValueChange = { password = it },
             placeholder = { Text("Minimal 6 karakter", color = onSecondaryText.copy(alpha = 0.5f)) },
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = BlueHeadline) },
+            trailingIcon = {
+                val image = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(imageVector = image, contentDescription = null, tint = BlueHeadline)
+                }
+            },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(14.dp),
-            visualTransformation = PasswordVisualTransformation(),
+            visualTransformation = if (passwordVisible) androidx.compose.ui.text.input.VisualTransformation.None else PasswordVisualTransformation(),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = BlueHeadline,
@@ -141,8 +151,8 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit, onNavigateToLogin: () -> Unit)
                     Toast.makeText(context, "Semua kolom wajib diisi!", Toast.LENGTH_SHORT).show()
                 } else if (npm.length != 10 || !npm.all { it.isDigit() }) {
                     Toast.makeText(context, "NPM harus 10 angka!", Toast.LENGTH_SHORT).show()
-                } else if (!email.contains("@")) {
-                    Toast.makeText(context, "Format email tidak valid!", Toast.LENGTH_SHORT).show()
+                } else if (!email.matches(emailRegex)) {
+                    Toast.makeText(context, "Format email tidak valid (contoh: user@gmail.com)!", Toast.LENGTH_SHORT).show()
                 } else if (password.trim().length < 6) {
                     Toast.makeText(context, "Kata sandi minimal harus 6 karakter!", Toast.LENGTH_SHORT).show()
                 } else {

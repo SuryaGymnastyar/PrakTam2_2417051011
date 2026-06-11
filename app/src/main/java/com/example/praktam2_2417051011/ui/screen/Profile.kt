@@ -61,6 +61,7 @@ fun Profile(onLogoutSuccess: () -> Unit) {
     var showEditDialog by remember { mutableStateOf(false) }
     var editNamaInput by remember { mutableStateOf("") }
     var editEmailInput by remember { mutableStateOf("") }
+    val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$".toRegex()
 
     val dismissEditDialog = { focusManager.clearFocus(); showEditDialog = false; editNamaInput = ""; editEmailInput = "" }
     val dismissLogoutDialog = { showLogoutDialog = false }
@@ -143,7 +144,12 @@ fun Profile(onLogoutSuccess: () -> Unit) {
                     Button(colors = ButtonDefaults.buttonColors(containerColor = BlueHeadline), shape = RoundedCornerShape(10.dp), onClick = {
                         val trimmedNama = editNamaInput.trim()
                         val trimmedEmail = editEmailInput.trim()
-                        if (trimmedNama.isBlank() || trimmedEmail.isBlank()) Toast.makeText(context, "Data tidak boleh kosong!", Toast.LENGTH_SHORT).show()
+                        if (trimmedNama.isBlank() || trimmedEmail.isBlank()) {
+                            Toast.makeText(context, "Data tidak boleh kosong!", Toast.LENGTH_SHORT).show()
+                        }
+                        else if (!emailRegex.matches(trimmedEmail)) {
+                            Toast.makeText(context, "Format email tidak valid!", Toast.LENGTH_SHORT).show()
+                        }
                         else {
                             sharedPreferences.edit { putString("registered_nama", trimmedNama); putString("registered_email", trimmedEmail) }
                             userNama = trimmedNama; userEmail = trimmedEmail

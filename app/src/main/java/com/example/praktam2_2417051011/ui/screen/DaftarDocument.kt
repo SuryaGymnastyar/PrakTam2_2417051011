@@ -32,9 +32,13 @@ import com.example.praktam2_2417051011.ui.theme.CardSurface
 import com.example.praktam2_2417051011.ui.theme.onPrimaryText
 import com.example.praktam2_2417051011.ui.theme.onSecondaryText
 
+//Modul 4 Text, Button, Image, Column, Row,  Box, Modifier
+//Modul 5 State, muteableStateOf,  remember, event handling
+//Modul 12 dan 13 integrasi coil
 @Composable
 fun DaftarDocument(navController: NavController, docs: List<Documents>) {
     val context = LocalContext.current
+    //ngambil nama user yang disimpan di memori hp
     val sharedPreferences = remember {
         context.getSharedPreferences("comvault_prefs", Context.MODE_PRIVATE)
     }
@@ -127,6 +131,7 @@ fun DaftarDocument(navController: NavController, docs: List<Documents>) {
                         color = onPrimaryText,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
+                    //biar bisa geser samping
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         items(docs) { doc ->
                             Card(

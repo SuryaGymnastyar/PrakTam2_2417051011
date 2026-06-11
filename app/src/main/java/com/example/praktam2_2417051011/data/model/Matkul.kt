@@ -9,5 +9,6 @@ data class Matkul(
     val nama: String,
     @SerializedName("semester")
     val semester: Int,
+    //var karna dia nanti dapat berubah
     var lastOpened: Long = 0L
 )

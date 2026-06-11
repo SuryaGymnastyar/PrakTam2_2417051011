@@ -50,6 +50,7 @@ fun Dashboard(
         }
     }
 
+    //scaffold ini menyediakan topbar, bottombar, dan konten utama
     Scaffold(
         bottomBar = {
             NavigationBar(

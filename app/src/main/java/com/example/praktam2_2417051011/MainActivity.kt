@@ -19,7 +19,7 @@ import com.example.praktam2_2417051011.ui.screen.DetailDocuments
 import com.example.praktam2_2417051011.ui.screen.LoginScreen
 import com.example.praktam2_2417051011.ui.screen.RegisterScreen
 import com.example.praktam2_2417051011.ui.theme.PrakTam2_2417051011Theme
-
+//Modul 8 Navcontroller, navhost
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

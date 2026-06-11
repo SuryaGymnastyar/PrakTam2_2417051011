@@ -3,7 +3,7 @@ package com.example.praktam2_2417051011.ui.theme
 import androidx.compose.ui.graphics.Color
 
 val Pink40 = Color(0xFF7D5260)
-
+//Modul 7 Color Scheme
 val BluePrimary = Color(0xFFF8FAFC)
 val BlueSecondary = Color(0xFF5C6BC0)
 

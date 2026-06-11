@@ -44,12 +44,16 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+//togglenya disini ada yg favorit
+//Modul 6 lazycolumn, card
+//Modul 9 Couroutine
 @Composable
 fun DetailDocuments(
     documents: Documents,
     navController: NavController
 ) {
     val context = LocalContext.current
+    //manajemen state, jadi kan milih semester, milih matku, baru pilih folernya untuk upload
     var selectedSemester by remember { mutableStateOf<Int?>(null) }
     var selectedMatkul by remember { mutableStateOf<Matkul?>(null) }
 
@@ -99,6 +103,7 @@ fun DetailDocuments(
         masterMatkulList = repository.getMatkul()
     }
 
+    //kalo ada file yang crud file baru
     LaunchedEffect(selectedMatkul, showAddDialog, showEditDialog, showDeleteConfirmDialog) {
         selectedMatkul?.let { matkul ->
             currentFileList = repository.getFilesByMatkul(matkul.kode, documents.jenis)
@@ -518,6 +523,7 @@ fun DetailDocuments(
     }
 }
 
+//megnubah uri menjadi file fisik yang disimpan di private storage hp
 private fun saveToInternalStorage(context: Context, uri: Uri, fileNameWithExtension: String): String? {
     return try {
         val inputStream = context.contentResolver.openInputStream(uri) ?: return null
@@ -534,6 +540,7 @@ private fun saveToInternalStorage(context: Context, uri: Uri, fileNameWithExtens
     }
 }
 
+//buat kasi file akses untuk membuka file pake apa aja
 private fun openFile(context: Context, filePath: String, jenisDokumen: String) {
     try {
         val file = File(filePath)

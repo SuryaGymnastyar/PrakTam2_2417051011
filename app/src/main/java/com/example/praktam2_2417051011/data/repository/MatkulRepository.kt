@@ -6,6 +6,7 @@ import com.example.praktam2_2417051011.data.model.Matkul
 class MatkulRepository {
 
     companion object {
+        //penyimpanan dummy seentara
         val dummyFiles = mutableListOf<LocalFile>()
     }
 
@@ -117,6 +118,7 @@ class MatkulRepository {
         )
     }
 
+    //buat nyari kode matkul dengan jenis file yg cocok
     fun getFilesByMatkul(kodeMatkul: String, jenis: String): List<LocalFile> {
         return dummyFiles
             .filter { it.kodeMatkul == kodeMatkul && it.jenisDokumen.equals(jenis, ignoreCase = true) }
